@@ -12,17 +12,35 @@ def asc_key
 end
 
 WORKSPACE = "ios/App/App.xcworkspace" # Capacitor(CocoaPods) 생성물
+PROJECT   = "ios/App/App.xcodeproj"    # 서명 설정을 주입할 대상
 SCHEME    = "App"
+
+# Capacitor가 매번 새로 생성하는 프로젝트엔 개발팀(Team)이 안 박혀 있어
+# 아카이브가 "requires a development team" 으로 실패한다. 빌드 직전에
+# 자동 서명 + 팀 ID를 주입한다(수동 인증서/프로파일 없음, ASC API Key로 자동 관리).
+def apply_automatic_signing
+  update_code_signing_settings(
+    use_automatic_signing: true,
+    team_id: ENV["APPLE_TEAM_ID"],
+    path: PROJECT,
+    targets: ["App"]
+  )
+end
 
 platform :ios do
   desc "빌드 후 TestFlight 업로드(스크린샷 불필요 — 첫 목표: 대표 아이폰 실기기 확인)"
   lane :beta do
     key = asc_key
+    apply_automatic_signing
     build_app(
       workspace: WORKSPACE,
       scheme: SCHEME,
       export_method: "app-store",
-      xcargs: "-allowProvisioningUpdates"
+      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}",
+      export_options: {
+        signingStyle: "automatic",
+        teamID: ENV["APPLE_TEAM_ID"]
+      }
     )
     upload_to_testflight(
       api_key: key,
@@ -33,11 +51,16 @@ platform :ios do
   desc "빌드 후 App Store Connect 업로드(메타데이터 포함). 심사 제출은 수동(대표 승인)."
   lane :release do
     key = asc_key
+    apply_automatic_signing
     build_app(
       workspace: WORKSPACE,
       scheme: SCHEME,
       export_method: "app-store",
-      xcargs: "-allowProvisioningUpdates"
+      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}",
+      export_options: {
+        signingStyle: "automatic",
+        teamID: ENV["APPLE_TEAM_ID"]
+      }
     )
     upload_to_app_store(
       api_key: key,
