@@ -1,0 +1,46 @@
+name: iOS build check (no signing)
+
+# 애플 키 없이도 되는 부분(Capacitor iOS 생성 + 컴파일)을 클라우드 맥에서 검증한다.
+# 시뮬레이터 대상 빌드라 코드서명이 필요 없다. 업로드는 하지 않는다.
+# 목적: 대표가 애플 키를 넣기 전에 빌드 파이프라인의 버그를 미리 잡아둔다.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-check:
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install JS deps
+        run: npm install
+
+      - name: Generate iOS project (Capacitor)
+        run: |
+          npx cap add ios || echo "ios already present"
+          npx cap sync ios
+
+      - name: Show iOS project
+        run: ls -la ios/App && xcodebuild -list -workspace ios/App/App.xcworkspace
+
+      - name: Build for simulator (no code signing)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
