@@ -47,8 +47,8 @@ jobs:
 
       - name: Write ASC API key (.p8) from secret
         run: |
-          mkdir -p fastlane
-          printf '%s' "${ASC_API_KEY_P8}" > fastlane/asc_api_key.p8
+          mkdir -p "${{ github.workspace }}/fastlane"
+          printf '%s' "${ASC_API_KEY_P8}" > "${{ github.workspace }}/fastlane/asc_api_key.p8"
         env:
           ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
 
@@ -57,6 +57,8 @@ jobs:
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_API_KEY_PATH: fastlane/asc_api_key.p8
+          # 절대경로로 준다 — fastlane 실행 CWD가 fastlane/ 폴더라
+          # 상대경로면 fastlane/fastlane/... 로 이중 결합돼 파일을 못 찾는다.
+          ASC_API_KEY_PATH: ${{ github.workspace }}/fastlane/asc_api_key.p8
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APP_IDENTIFIER: com.workpaytracker.app
