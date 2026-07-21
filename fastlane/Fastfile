@@ -27,6 +27,19 @@ def apply_automatic_signing
   )
 end
 
+# xcodebuild가 -allowProvisioningUpdates 로 프로파일을 자동 생성하려면
+# App Store Connect API Key를 xcodebuild에 직접 넘겨야 한다(로그인 계정 없이).
+# 안 넘기면 "No Accounts / No profiles were found" 로 아카이브가 실패한다.
+def signing_xcargs
+  [
+    "-allowProvisioningUpdates",
+    "-authenticationKeyPath #{File.absolute_path(ENV['ASC_API_KEY_PATH'])}",
+    "-authenticationKeyID #{ENV['ASC_KEY_ID']}",
+    "-authenticationKeyIssuerID #{ENV['ASC_ISSUER_ID']}",
+    "DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}"
+  ].join(" ")
+end
+
 platform :ios do
   desc "빌드 후 TestFlight 업로드(스크린샷 불필요 — 첫 목표: 대표 아이폰 실기기 확인)"
   lane :beta do
@@ -36,7 +49,7 @@ platform :ios do
       workspace: WORKSPACE,
       scheme: SCHEME,
       export_method: "app-store",
-      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}",
+      xcargs: signing_xcargs,
       export_options: {
         signingStyle: "automatic",
         teamID: ENV["APPLE_TEAM_ID"]
@@ -56,7 +69,7 @@ platform :ios do
       workspace: WORKSPACE,
       scheme: SCHEME,
       export_method: "app-store",
-      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}",
+      xcargs: signing_xcargs,
       export_options: {
         signingStyle: "automatic",
         teamID: ENV["APPLE_TEAM_ID"]
