@@ -1,0 +1,52 @@
+default_platform(:ios)
+
+# App Store Connect API Key(.p8)로만 인증한다(Apple ID/암호·2FA 자동입력 없음).
+# 서명은 -allowProvisioningUpdates 로 xcodebuild가 자동 관리(수동 인증서/프로파일 없음).
+def asc_key
+  app_store_connect_api_key(
+    key_id: ENV["ASC_KEY_ID"],
+    issuer_id: ENV["ASC_ISSUER_ID"],
+    key_filepath: ENV["ASC_API_KEY_PATH"],
+    in_house: false
+  )
+end
+
+WORKSPACE = "ios/App/App.xcworkspace" # Capacitor(CocoaPods) 생성물
+SCHEME    = "App"
+
+platform :ios do
+  desc "빌드 후 TestFlight 업로드(스크린샷 불필요 — 첫 목표: 대표 아이폰 실기기 확인)"
+  lane :beta do
+    key = asc_key
+    build_app(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      export_method: "app-store",
+      xcargs: "-allowProvisioningUpdates"
+    )
+    upload_to_testflight(
+      api_key: key,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "빌드 후 App Store Connect 업로드(메타데이터 포함). 심사 제출은 수동(대표 승인)."
+  lane :release do
+    key = asc_key
+    build_app(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      export_method: "app-store",
+      xcargs: "-allowProvisioningUpdates"
+    )
+    upload_to_app_store(
+      api_key: key,
+      submit_for_review: false,   # 심사 제출은 사람이 최종 확인 후 수동으로.
+      automatic_release: false,
+      force: true,                # HTML 미리보기 창 없이 진행(CI).
+      skip_screenshots: true,     # 스크린샷은 이후 단계에서 추가.
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false
+    )
+  end
+end

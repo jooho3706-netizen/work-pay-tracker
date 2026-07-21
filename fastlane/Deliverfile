@@ -1,0 +1,3 @@
+app_identifier "com.workpaytracker.app"
+# 메타데이터는 fastlane/metadata/ 아래 파일에서 읽는다.
+# 심사 제출·스크린샷은 Fastfile release 레인 옵션에서 제어(기본: 수동 제출).

@@ -1,0 +1,3 @@
+app_identifier(ENV["APP_IDENTIFIER"] || "com.workpaytracker.app")
+team_id(ENV["APPLE_TEAM_ID"]) if ENV["APPLE_TEAM_ID"]
+# Apple ID/암호는 쓰지 않는다. 인증은 App Store Connect API Key(.p8)로만 한다.

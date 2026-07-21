@@ -1,0 +1,21 @@
+{
+  "name": "work-pay-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "근무·급여 오차 추적기 — 예정 근무·실제 근무·실제 입금액을 비교하는 개인용 기록 도구 (참고 계산, 체불 판정 아님)",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 -m http.server 8080 --directory app",
+    "cap:sync": "cap sync ios"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/ios": "^6.2.0"
+  }
+}

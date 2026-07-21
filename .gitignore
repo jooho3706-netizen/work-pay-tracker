@@ -1,0 +1,32 @@
+# Node / build
+node_modules/
+dist/
+build/
+
+# OS / editor
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Local exports produced by the app during testing
+*.export.json
+*.export.txt
+
+# Native wrappers (generated fresh in CI — not committed)
+ios/
+android/
+.capacitor/
+
+# iOS signing / CI secrets — NEVER commit
+*.p8
+*.p12
+*.mobileprovision
+*.cer
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output/
+fastlane/asc_api_key.p8
+DerivedData/
+*.ipa
+*.dSYM.zip

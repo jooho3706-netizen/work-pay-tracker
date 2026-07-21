@@ -1,0 +1,62 @@
+name: iOS App Store (Capacitor + fastlane)
+
+# 로컬 Xcode/맥 없이 GitHub의 macOS 러너(클라우드)에서 빌드·서명·업로드한다.
+# 수동 실행(workflow_dispatch)만 — 아무 때나 자동 배포되지 않는다.
+# 서명은 App Store Connect API Key(.p8) 기반 automatic signing(-allowProvisioningUpdates).
+# 비밀값은 전부 GitHub Secrets에서 주입(레포/코드에 키 없음).
+
+on:
+  workflow_dispatch:
+    inputs:
+      lane:
+        description: "fastlane lane"
+        default: "beta"        # beta = TestFlight 업로드(스크린샷 불필요, 첫 목표)
+        type: choice
+        options:
+          - beta               # 빌드 → TestFlight (대표가 아이폰에서 실기기 확인)
+          - release            # 빌드 → App Store Connect 업로드(메타데이터, 심사 제출은 수동)
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install JS deps
+        run: npm install
+
+      - name: Generate iOS project (Capacitor)
+        run: |
+          npx cap add ios || echo "ios already present"
+          npx cap sync ios
+
+      - name: Setup Ruby (fastlane)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+
+      - name: Install fastlane
+        run: gem install fastlane -NV
+
+      - name: Write ASC API key (.p8) from secret
+        run: |
+          mkdir -p fastlane
+          printf '%s' "${ASC_API_KEY_P8}" > fastlane/asc_api_key.p8
+        env:
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+
+      - name: Run fastlane (${{ github.event.inputs.lane }})
+        run: fastlane ios "${{ github.event.inputs.lane }}"
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_PATH: fastlane/asc_api_key.p8
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_IDENTIFIER: com.workpaytracker.app

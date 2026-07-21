@@ -1,0 +1,8 @@
+{
+  "appId": "com.workpaytracker.app",
+  "appName": "WorkPayTracker",
+  "webDir": "app",
+  "ios": {
+    "contentInset": "always"
+  }
+}

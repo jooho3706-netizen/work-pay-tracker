@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="description" content="예정 근무·실제 근무·실제 입금액을 비교하는 개인용 기록 도구(참고 계산)." />
+  <title>근무·급여 오차 추적기</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <noscript>이 앱은 자바스크립트가 필요합니다. 브라우저에서 자바스크립트를 켜 주세요.</noscript>
+  <div id="app" aria-live="polite"></div>
+  <!-- 근무·급여 데이터(금액·시간·근무지·이름·메모)는 이 기기에만 저장된다.
+       제품 개선용 익명 사용량(어느 단계까지 도달했는지 이벤트 "이름" + 서버가 찍는 발생 시각)만
+       별도 저장소로 집계하며, 개인을 식별하는 값은 전송하지 않는다. 측정 로직은 src/measure.js.
+       (Vercel Hobby는 커스텀 이벤트를 저장하지 않으므로 사용하지 않는다. 필요 시 Vercel
+        페이지뷰 Analytics를 방문 수 확인용으로만 별도 추가할 수 있다.) -->
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
