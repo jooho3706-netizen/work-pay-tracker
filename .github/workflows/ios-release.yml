@@ -51,6 +51,17 @@ jobs:
           npx cap add ios || echo "ios already present"
           npx cap sync ios
 
+      # 수출 규정(암호화) 신고: 이 앱은 개인용 로컬 기록 도구로 표준 암호화(HTTPS) 외
+      # 별도 암호화를 쓰지 않아 면제 대상이다. Info.plist에 미리 박아두면 업로드마다
+      # TestFlight가 암호화 질문을 묻지 않아 대표가 매번 답할 필요가 없다.
+      # (ios 프로젝트는 CI에서 매번 새로 생성되므로 sync 직후 주입한다.)
+      - name: Declare export compliance (no non-exempt encryption)
+        run: |
+          PLIST="ios/App/App/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" \
+            || /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Print :ITSAppUsesNonExemptEncryption" "$PLIST"
+
       - name: Setup Ruby (fastlane)
         uses: ruby/setup-ruby@v1
         with:
