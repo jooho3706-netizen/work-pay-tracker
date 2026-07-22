@@ -18,11 +18,25 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # App Store는 iOS 26 SDK(Xcode 26+)로 빌드한 앱만 받는다.
+      # 러너에 설치된 Xcode 중 가장 최신 버전을 선택하고, 실제 SDK 버전을 로그에 남긴다.
+      - name: Select newest Xcode (iOS 26 SDK required by App Store)
+        run: |
+          set -e
+          echo "설치된 Xcode 목록:"
+          ls -d /Applications/Xcode*.app || true
+          latest=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$latest" ]; then latest="/Applications/Xcode.app"; fi
+          echo "선택한 Xcode: $latest"
+          sudo xcode-select -s "$latest/Contents/Developer"
+          xcodebuild -version
+          echo "iOS SDK 버전: $(xcrun --sdk iphoneos --show-sdk-version)"
 
       - name: Setup Node
         uses: actions/setup-node@v4
