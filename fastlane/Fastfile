@@ -108,4 +108,28 @@ platform :ios do
       }
     )
   end
+
+  # 스크린샷만 App Store Connect에 올린다(빌드·메타·심사 제출 없음).
+  #
+  # 이유: 아카이브/업로드 도구가 이 환경에서 로컬 파일을 받지 못해 아이패드 13"
+  # 스크린샷을 브라우저로 올릴 수 없다. 빌드·메타·개인정보는 이미 ASC에 준비돼
+  # 있으므로, 남은 유일한 미비 항목(아이패드 스크린샷)만 클라우드 deliver로 올린다.
+  # 새 빌드를 만들지 않고(skip_binary_upload) 심사도 제출하지 않는다(submit_for_review:false).
+  # overwrite_screenshots 로 fastlane/screenshots 의 전체 세트(아이폰+아이패드)를
+  # 그대로 반영해 최종 상태를 결정적으로 만든다.
+  desc "스크린샷만 업로드(빌드/메타/제출 없음) — 아이패드 스크린샷 미비 해소용."
+  lane :shots do
+    key = asc_key
+    upload_to_app_store(
+      api_key: key,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_app_version_update: true,
+      overwrite_screenshots: true,
+      submit_for_review: false,
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
+      force: true
+    )
+  end
 end

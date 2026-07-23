@@ -1,0 +1,41 @@
+name: ASC screenshots upload (no build)
+
+# 아이패드 13" 스크린샷만 App Store Connect에 올린다.
+# 빌드/서명/Xcode가 필요 없다(deliver는 ASC API로만 스크린샷을 올린다) → Linux에서 빠르게 실행.
+# shots-* 태그를 push하면 실행된다. 비밀값은 전부 GitHub Secrets에서 주입.
+on:
+  push:
+    tags:
+      - 'shots-*'
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby (fastlane)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+
+      - name: Install fastlane
+        run: gem install fastlane -NV
+
+      - name: Write ASC API key (.p8) from secret
+        run: |
+          mkdir -p "${{ github.workspace }}/fastlane"
+          printf '%s' "${ASC_API_KEY_P8}" > "${{ github.workspace }}/fastlane/asc_api_key.p8"
+        env:
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+
+      - name: Run fastlane (shots — screenshots only)
+        run: fastlane ios shots
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_PATH: ${{ github.workspace }}/fastlane/asc_api_key.p8
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_IDENTIFIER: com.workpaytracker.app
