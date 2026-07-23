@@ -1,0 +1,41 @@
+name: ASC submit for review (no build)
+
+# 이미 App Store Connect에 준비된 버전 1.0을 "심사 제출"만 한다(빌드/서명/Xcode 불필요).
+# deliver가 ASC API로 심사 제출을 처리 → Linux에서 빠르게 실행. 승인 시 자동 출시.
+# submit-* 태그를 push하면 실행된다. 비밀값은 전부 GitHub Secrets에서 주입.
+on:
+  push:
+    tags:
+      - 'submit-*'
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby (fastlane)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+
+      - name: Install fastlane
+        run: gem install fastlane -NV
+
+      - name: Write ASC API key (.p8) from secret
+        run: |
+          mkdir -p "${{ github.workspace }}/fastlane"
+          printf '%s' "${ASC_API_KEY_P8}" > "${{ github.workspace }}/fastlane/asc_api_key.p8"
+        env:
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+
+      - name: Run fastlane (submit for review — no build)
+        run: fastlane ios submit
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_PATH: ${{ github.workspace }}/fastlane/asc_api_key.p8
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_IDENTIFIER: com.workpaytracker.app

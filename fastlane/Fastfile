@@ -132,4 +132,34 @@ platform :ios do
       force: true
     )
   end
+
+  # 이미 App Store Connect에 준비된 버전 1.0(빌드·메타·스크린샷·개인정보 완비)을
+  # 심사에 제출한다. 새 빌드/스크린샷/메타를 다시 올리지 않는다(전부 skip). 승인되면
+  # 자동 출시(automatic_release). ASC API Key로만 인증하므로 Linux에서 빠르게 실행된다.
+  #
+  # 이유: 웹 ASC UI의 버전 페이지가 반복적으로 멈춰(백엔드 503 재시도로 JS 스레드가
+  # 포화) "심사에 추가/제출"을 브라우저로 안정적으로 누를 수 없다. deliver는 심사
+  # 제출을 ASC API로 처리하므로 브라우저 상태와 무관하게 결정적이다.
+  desc "재빌드/재업로드 없이, 준비된 버전 1.0을 심사 제출(승인 시 자동 출시)."
+  lane :submit do
+    key = asc_key
+    upload_to_app_store(
+      api_key: key,
+      skip_binary_upload: true,       # 빌드는 이미 ASC에 붙어 있음 → 재업로드 금지
+      skip_screenshots: true,         # 스크린샷은 이미 완비(아이폰6 + 아이패드6)
+      skip_metadata: true,            # 메타데이터도 이미 완비
+      skip_app_version_update: true,  # 버전(1.0) 변경 없음
+      force: true,                    # HTML 미리보기 창 없이 진행(CI)
+      submit_for_review: true,        # 심사 제출까지 자동(대표 지시: 정식 제출)
+      automatic_release: true,        # 승인되면 자동으로 스토어에 출시
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
+      # 제출 체크리스트 자동 응답(광고식별자 미사용/암호화 면제/3자 콘텐츠 없음).
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        content_rights_contains_third_party_content: false
+      }
+    )
+  end
 end
