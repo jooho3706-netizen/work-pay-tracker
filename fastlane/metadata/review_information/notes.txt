@@ -1,0 +1,15 @@
+This app is a personal work-log and pay-comparison tool for individuals who want to keep their own records.
+
+The user records planned work hours, actual work hours, and the amount actually deposited for a pay period, then compares them side by side to see where a difference occurred.
+
+No account, sign-in, or registration is required. All records are stored only on the device (local storage). Nothing is uploaded to a server and there is no user account, so no sign-in credentials are needed to review the app.
+
+The monetary figures shown are a simple reference calculation from the hours and the base hourly rate the user enters. On every screen that displays an amount, the app clearly states that these figures may not reflect allowances, taxes, or other conditions, and that the app does not make any legal determination about wages or unpaid pay. It is a private note-taking tool, not a financial or legal-advice service.
+
+The app requests no device permissions (no camera, location, contacts, microphone, or notifications) and contains no third-party advertising or tracking SDKs.
+
+How to use:
+1. Open the app and read the short intro screen.
+2. In Settings, enter a workplace name and an hourly rate.
+3. Add a shift: enter planned start/end and actual start/end times (and a break).
+4. Open the pay-period view and enter the deposited amount to compare it with the calculated reference value.

@@ -14,7 +14,12 @@ on:
         type: choice
         options:
           - beta               # 빌드 → TestFlight (대표가 아이폰에서 실기기 확인)
-          - release            # 빌드 → App Store Connect 업로드(메타데이터, 심사 제출은 수동)
+          - release            # 빌드 → App Store Connect 업로드(메타+스크린샷, 심사 제출)
+  # release-* 태그를 push하면 release lane이 자동 실행된다.
+  # (대표 로그인 없이 Claude가 git 태그 push로 클라우드 빌드를 트리거하기 위함.)
+  push:
+    tags:
+      - 'release-*'
 
 jobs:
   build:
@@ -62,6 +67,17 @@ jobs:
             || /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST"
           /usr/libexec/PlistBuddy -c "Print :ITSAppUsesNonExemptEncryption" "$PLIST"
 
+      # 빌드번호 자동 증가: Capacitor 기본값은 매번 build 1 → 재업로드 시 Apple이
+      # "이미 존재하는 빌드"로 거절한다. GitHub 실행 번호(run number, 단조 증가)를
+      # CFBundleVersion 으로 박아 매 업로드가 유일하고 증가하도록 한다.
+      - name: Set unique build number (avoid duplicate-build rejection)
+        run: |
+          PLIST="ios/App/App/Info.plist"
+          BUILD_NO="${GITHUB_RUN_NUMBER}"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${BUILD_NO}" "$PLIST" \
+            || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string ${BUILD_NO}" "$PLIST"
+          echo "CFBundleVersion = $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")"
+
       - name: Setup Ruby (fastlane)
         uses: ruby/setup-ruby@v1
         with:
@@ -77,9 +93,11 @@ jobs:
         env:
           ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
 
-      - name: Run fastlane (${{ github.event.inputs.lane }})
-        run: fastlane ios "${{ github.event.inputs.lane }}"
+      # 태그 push 트리거에는 inputs.lane 이 없으므로 release 로 기본값 처리.
+      - name: Run fastlane (${{ github.event.inputs.lane || 'release' }})
+        run: fastlane ios "${LANE}"
         env:
+          LANE: ${{ github.event.inputs.lane || 'release' }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           # 절대경로로 준다 — fastlane 실행 CWD가 fastlane/ 폴더라
